@@ -21,6 +21,7 @@
 4. [실행화면](#4-실행화면)
 5. [트러블 슈팅](#5-트러블-슈팅)
 6. [Reference](#6-Reference)
+7. [팀 회고](#7-팀-회고)
 
 ---
 ## 1. 팀원 소개
@@ -127,7 +128,8 @@
 ### 1️⃣ CellRegistration을 통한 여러 UI모드 변경
 
 #### ❓문제점
-* 리스트<->아이콘으로 변경 시 기존에는 `collectionView.register`메소드를 이용하여 두개의 cell을 등록하고 `dataSource`를 변경해주는 로직으로 UI를 변경하였습니다.
+* 기존 리스트<->아이콘 화면 전환 시 각각의 셀에 맞는 `dataSource`를 생성하는 로직이었습니다.
+* 화면 전환 시 새로운 `dataSource`를 계속 만들기 때문에 비용이 많이 들며, 각각의 리스트와 아이콘의 `dataSource`를 생성하는 메소드가 따로 존재하였기 때문에 뷰 컨트롤러 내의 코드가 많았습니다.
 
 #### 📖해결한 점
 * 위 문제 해결을 위하여 `CellRegistration`을 사용하여 `dataSource`내에서 현재 `viewType`을 통해 재사용 셀을 디큐해주는 방식으로 구현하였습니다.
@@ -148,8 +150,8 @@ private func createDataSource() {
     })
 }
 ```
-
 * UI변경을 할 경우 `dataSource`는 그대로 사용하며 스냅샷을 통해 섹션 삭제와 `apply`메소드를 통하여 UI변경을 해주었습니다.
+* 위 방식을 통해 `dataSource`는 `viewDidLoad`시점에서 한번만 생성되며, 기존 두가지 메소드를 통해 리스트와 아이콘의 `dataSource`를 만드는 메소드도 지우므로 코드를 간략화 할 수 있었습니다.
 
 
 ### 2️⃣ 열거형 Associated Values의 사용
@@ -268,7 +270,22 @@ private func applySnapshot() {
 
 #### 📖해결법
 
-* 위와 같이 기존에 덮어쓰기를 할 경우 기존의 항목들이 다시 원래 자리로 돌아가는데 이럴 경우 작업비용이 더 많이 든다는 추가 문구가 있어서 위 메서드에서 스냅샷 인스턴스를 만들어 `dataSource`에 `apply`하는 방법으로 구현하였습니다.
+* 위와 같이 기존에 덮어쓰기를 할 경우 기존의 항목들이 다시 원래 자리로 돌아가는데 이럴 경우 작업비용이 더 많이 든다는 추가 문구가 있어서 위 메서드에서 새로운 스냅샷 인스턴스를 만들어 `dataSource`에 `apply`하는 방법으로 구현하였습니다.
+
+```swift
+private func applySnapshot(section: RankingViewType?) {
+    guard let dataManager = dataManager,
+          let section = section else { return }
+    
+    var snapshot = NSDiffableDataSourceSnapshot<RankingViewType, InfoObject>()
+
+    snapshot.appendSections([section])
+    snapshot.appendItems(dataManager.movieItems)
+    
+    dataSource?.apply(snapshot, animatingDifferences: true)
+}
+
+```
 
 ### 6️⃣ 어제 날짜를 출력하는 방법
 #### ❓문제점
@@ -338,8 +355,8 @@ func receiveUrl() -> URL? {
 
 ### 8️⃣ DispatchGroup을 이용한 비동기 작업들 이후 UI 일괄처리
 #### ❓문제점
-- `MovieDetailViewController`에서 이미지와 영화정보는 서로 다른 방식과 서버를 통해 처리하기 때문에, 이미지가 먼저 나오거나 영화 정보가 먼저 나오는 문제가 있었습니다.
-- `URLSessionDataTask`를 통해 비동기로 작업을 진행하므로 끝나는 타이밍을 알 수 없어 `DispatchGroup`을 통하여 해당 두 작업이 모두 끝날 경우 UI가 나오도록 하였습니다.
+- `MovieDetailViewController`에서 이미지와 영화정보는 서로 다른 쓰레드를 통해 처리하기 때문에, 이미지가 먼저 나오거나 영화 정보가 먼저 나오는 문제가 있었습니다.
+- `URLSessionDataTask`를 통해 비동기로 작업을 진행하므로 끝나는 타이밍을 알 수 없어 이미지와 영화 정보가 동시에 처리되는 시점을 확인하기 위해 `DispatchQueue`를 사용하였습니다.
 
 #### 📖해결법
 
@@ -352,6 +369,7 @@ private func stopLoading() {
     }
 }
 ```
+- `DispatchGroup`을 통하여 해당 두 작업이 모두 끝날 경우 UI가 나오도록 하였습니다.
 - `DispatchGroup`의 `notify`메소드를 통해 해당 그룹의 작업이 모두 끝나면 기존에 숨겨놨던 뷰를 다시 보여줌으로 동시에 UI가 보일 수 있게 구현하였습니다.
 
 ### 9️⃣ Extension과 convenience init를 사용한 반복 코드 줄이기
@@ -370,11 +388,10 @@ text.font = .boldSystemFont(ofSize: 12)
 text.translatesAutoresizingMaskIntoConstraints = false
 text.adjustsFontSizeToFitWidth = true
 text.adjustsFontForContentSizeCategory = true
-
 ...
 ```
 - 각각의 text마다 똑같은 옵션을 사용하는 경우가 많았습니다.
-- 동일한 코드가 많아짐으로써 코드 전체량이 많아지고 옵션값을 수정할 때마다 매번 각각의 Label로 가서 수정을 해주어야 했습니다.
+- 동일한 코드가 많아짐으로써 코드 전체량이 많아지고 옵션값을 수정할 때마다 매번 각각의 Label을 일일이 수정을 해줘야되서 유지보수가 힘든 문제점이 있었습니다.
 
 #### 📖해결법
 ```swift
@@ -408,3 +425,18 @@ extension UILabel {
 - [WWDC2019: Advances in UI Data Sources](https://developer.apple.com/videos/play/wwdc2019/220)
 - [WWDC2020: Modern cell configuration](https://developer.apple.com/videos/play/wwdc2020/10027/)
 - [WWDC2020: Lists in UICollectionView](https://developer.apple.com/videos/play/wwdc2020/10026)
+
+## 7. 팀 회고
+
+### 서로 칭찬하기
+|앤드류|레옹아범|
+|:--:|:--:|
+|4주동안 긴 프로젝트임에도 불구하고 항상 시간약속을 잘 지켜주셨습니다. 덕분에 UI와 다이나믹타입을 구현하는데 있어서 많은 공부를 하게 되었던것 같습니다.|현재의 코드에 만족하기보다는 좀 더 적합한 코드를 구현하기 위해서 자료를 찾고 적극적인 리팩토링을 시도하여 코드를 더 효율적이고 깔끔하게 다듬어주셨습니다. 덕분에 4주동안 옆에서 많은 것을 배웠습니다 감사합니다 |
+
+### 👍잘한 점
+1. Dynamic Type에 많은 옵션의 크기가 있는데 꼼꼼이 사이즈마다 대응을 잘한 점
+2. 틈틈이 코드를 살펴보면서 불필요한 코드나 중복된 기능이 있는 코드를 삭제하고 컨벤션에 맞게 순서를 정리하는 등 깔끔하게 코드를 구현한 점
+
+### 🙏아쉬운 점
+1. 네트워크 통신을 하는 `Model`들의 타입분리가 제대로 되지 않은 점
+2. 테스트코드 작성이 어렵게 코드를 구현한 점
