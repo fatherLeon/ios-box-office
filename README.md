@@ -1,6 +1,18 @@
 # 박스오피스 프로젝트 🎬
 > 영화진흥위원회 OPEN API, 다음 이미지 API를 사용한 오늘의 박스오피스와 영화 상세정보를 보여주는 앱
 
+### 핵심 경험
+- ✅ UnitTest를 통한 설계 검증
+- ✅ URL Session 서버 통신
+- ✅ Modern Collection View
+    - ✅ DiffableDataSource
+    - ✅ UICollectionViewListCell
+    - ✅ Snapshot
+    - ✅ CellRegistration
+- ✅ UICalendarView
+- ✅ UIToolBar
+
+
 ---
 ## 목차 📋
 1. [팀원 소개](#1-팀원-소개)
@@ -18,6 +30,9 @@
 | [<img src="https://i.imgur.com/IOAJpzu.png" width="22"/> Github](https://github.com/Andrew-0411) | [<img src="https://i.imgur.com/IOAJpzu.png" width="22"/> Github](https://github.com/fatherLeon) |
 
 ## 2. 타임라인
+
+<details><summary><big>타임라인</big></summary>
+    
 |날짜|진행 내용|
 |---|---|
 |2023-03-20(월)|API 통신을 위한 모델 타입 구현|
@@ -35,102 +50,107 @@
 |2023-04-05(수)|UICalendarView를 활용한 날짜선택 화면 구현|
 |2023-04-06(목)|Model 및 View Controller 리팩토링|
 |2023-04-07(금)|README 작성|
+|2023-04-10(월)|Custom UI 수정|
+|2023-04-11(화)|모드선택(UIToolbar, ActionSheet) 구현|
+|2023-04-12(수)|사용자 설정에 실시간 대응할 수 있도록 Dynamic Type 구현|
+|2023-04-13(목)|전체 코드 리팩토링 및 불필요한 코드 수정|
+|2023-04-14(금)|README 작성|
 
+</details>
 
 ## 3. 프로젝트 구조
 
 ### 1️⃣ 폴더 구조
 ```
 ├── BoxOffice
-│   ├── AppDelegate.swift
-│   ├── BoxOfficeInfo.plist
-│   ├── Extension
-│   │   ├── Bundle+extension.swift
-│   │   ├── Date+extension.swift
-│   │   ├── String+extension.swift
-│   │   └── ViewController+extension.swift
-│   ├── Info.plist
-│   ├── Model
-│   │   ├── APIType.swift
-│   │   ├── BoxofficeError.swift
-│   │   ├── BoxofficeInfo.swift
-│   │   ├── DTO
-│   │   │   ├── BoxofficeDTO
-│   │   │   │   ├── BoxofficeResultObject.swift
-│   │   │   │   ├── DailyBoxofficeObject.swift
-│   │   │   │   └── InfoObject.swift
-│   │   │   ├── MovieDTO
-│   │   │   │   ├── MovieInfoDescObject.swift
-│   │   │   │   ├── MovieInfoObject.swift
-│   │   │   │   └── MovieInfoResultObject.swift
-│   │   │   └── MovieImageDTO
-│   │   │       └── MovieImageObject.swift
-│   │   ├── Manager
-│   │   │   ├── MovieDescManager.swift
-│   │   │   └── RankingManager.swift
-│   │   ├── NetworkModel.swift
-│   │   └── UIModel
-│   │       ├── CellUIModel.swift
-│   │       └── MovieInfoUIModel.swift
-│   ├── Protocol
-│   │   └── NetworkingProtocol.swift
-│   └── SceneDelegate.swift
-├── BoxofficeInfoTests
-│   ├── BoxofficeInfoTests.swift
-│   ├── NetworkModelTests.swift
-│   └── TestModel
-│       ├── MockNetworkModel.swift
-│       ├── MockURLProtocolObject.swift
-│       └── StubBoxoffice.swift
-├── Controller
-│   ├── MovieDetailViewController.swift
-│   └── MovieRankingViewController.swift
-├── MovieInfoTests
-│   └── MovieInfoTests.swift
-└── View
-    ├── MovieRankingCell.swift
-    └── UIStackView
-        ├── ContentStackView.swift
-        └── DescStackView.swift
+    ├── BoxOfficeInfo.plist
+    ├── Controller
+    │   ├── CalendarViewController.swift
+    │   ├── MovieDetailViewController.swift
+    │   └── MovieRankingViewController.swift
+    ├── Extension
+    │   ├── Bundle+extension.swift
+    │   ├── Date+extension.swift
+    │   ├── String+extension.swift
+    │   ├── UILabel+extension.swift
+    │   └── ViewController+extension.swift
+    ├── Info.plist
+    ├── Model
+    │   ├── APIType.swift
+    │   ├── BoxofficeError.swift
+    │   ├── BoxofficeInfo.swift
+    │   ├── DTO
+    │   │   ├── BoxofficeDTO
+    │   │   │   ├── BoxofficeResultObject.swift
+    │   │   │   ├── DailyBoxofficeObject.swift
+    │   │   │   └── InfoObject.swift
+    │   │   ├── MovieDTO
+    │   │   │   ├── MovieInfoDescObject.swift
+    │   │   │   ├── MovieInfoObject.swift
+    │   │   │   └── MovieInfoResultObject.swift
+    │   │   └── MovieImageDTO
+    │   │       └── MovieImageObject.swift
+    │   ├── Manager
+    │   │   ├── MovieDescManager.swift
+    │   │   └── RankingManager.swift
+    │   ├── NetworkModel.swift
+    │   ├── RankingViewType.swift
+    │   └── UIModel
+    │       ├── CellUIModel.swift
+    │       └── MovieInfoUIModel.swift
+    ├── Protocol
+    │   ├── ChangedDateDelegate.swift
+    │   └── NetworkingProtocol.swift
+    └── View
+        ├── MovieRankingIconCell.swift
+        ├── MovieRankingListCell.swift
+        └── UIStackView
+            ├── ContentStackView.swift
+            └── DescStackView.swift
 ```
 
 ### 2️⃣ 클래스 다이어그램
-![](https://i.imgur.com/ojWRDVL.jpg)
+![](https://github.com/Andrew-0411/ios-box-office/blob/step6/images/classDiagram.png?raw=true)
 
 ## 4. 실행화면
 
 |데이터 로딩 시 로딩화면 표시|어제의 박스오피스 화면|영화상세정보 화면|
 |:--:|:--:|:--:|
-|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step3/images/startLoading.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step3/images/mainVC1.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step4/images/descInfo.gif?raw=true" width="220" height ="500">|
+|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/1.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/3.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/2.gif?raw=true" width="220" height ="500">|
+
+|특정날짜의 박스오피스 화면|다이나믹타입 적용 - 1|다이나믹타입 적용 - 2|
+|:--:|:--:|:--:|
+|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/4.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/5.gif?raw=true" width="220" height ="500">|<img src="https://github.com/Andrew-0411/ios-box-office/blob/step6/images/실행화면/6.gif?raw=true" width="220" height ="500">|
 
 ## 5. 트러블 슈팅
 
-### 1️⃣ 특정 DTO만을 사용할 수 있는 네트워크 모델 만들기
+### 1️⃣ CellRegistration을 통한 여러 UI모드 변경
 
 #### ❓문제점
-
-```swift
-struct BoxofficeInfo<T: Decodable> {
-    mutating func search(completion: @escaping (Result<T, BoxofficeError>) -> Void)
-}
-```
-
-* 기존 `Decodable`만을 채택한 모델을 받을 경우 가장 상위 DTO인 `DailyBoxofficeObject` 이외의 `InfoObject`, `BoxofficeResultObject` 등 하위 DTO를 인자로 줄 경우 `decodingError`가 발생하므로 이를 사전에 따로 프로토콜을 생성하여 방지하고자 하였습니다.
+* 리스트<->아이콘으로 변경 시 기존에는 `collectionView.register`메소드를 이용하여 두개의 cell을 등록하고 `dataSource`를 변경해주는 로직으로 UI를 변경하였습니다.
 
 #### 📖해결한 점
+* 위 문제 해결을 위하여 `CellRegistration`을 사용하여 `dataSource`내에서 현재 `viewType`을 통해 재사용 셀을 디큐해주는 방식으로 구현하였습니다.
 
 ```swift
-protocol Fetchable: Decodable { }
-
-struct DailyBoxofficeObject: Fetchable { }
-struct MovieInfoObject: Fetchable { }
-
-struct BoxofficeInfo<T: Fetchable> {
-    mutating func search(completion: @escaping (Result<T, BoxofficeError>) -> Void)
+private func createDataSource() {
+    guard let collectionView = self.collectionView else { return }
+    
+    let listCellRegistration = UICollectionView.CellRegistration<MovieRankingListCell, InfoObject> { cell, indexPath, item in
+    //....
+    dataSource = UICollectionViewDiffableDataSource<RankingViewType, InfoObject>(collectionView: collectionView, cellProvider: { [self] collectionView, indexPath, itemIdentifier in
+        switch self.rankingViewType {
+        case .icon:
+            return collectionView.dequeueConfiguredReusableCell(using: iconCellRegistration, for: indexPath, item: itemIdentifier)
+        case .list:
+            return collectionView.dequeueConfiguredReusableCell(using: listCellRegistration, for: indexPath, item: itemIdentifier)
+        }
+    })
 }
 ```
 
-* 상위객체에만 `Fetchable`을 채택함으로 해당 객체가 아닌 다른 객체 타입으로는 `BoxofficeInfo`를 만들지 못하도록 만들었습니다.
+* UI변경을 할 경우 `dataSource`는 그대로 사용하며 스냅샷을 통해 섹션 삭제와 `apply`메소드를 통하여 UI변경을 해주었습니다.
+
 
 ### 2️⃣ 열거형 Associated Values의 사용
 
@@ -167,13 +187,11 @@ enum APIType {
 ### 3️⃣ URLProtocol 사용하여 Unit Test
 
 #### ❓문제점
-<img src="https://github.com/Andrew-0411/ios-box-office/blob/step3/images/urlsessiondatatask.png?raw=true" width="500">
-
-![](https://i.imgur.com/8BhSorS.png)
+<img src="https://github.com/Andrew-0411/ios-box-office/blob/step3/images/urlsessiondatatask.png?raw=true" width="300">
 
 - URLSessionDataTask의 init이 iOS 13 버전부터 deprecated가 되었습니다.
-- 실제로 사용해보니 컴파일 경고가 나왔고 이후 버전에서도 테스트하기 어렵다고 판단
-- 다른 방법을 찾다가 URLProtocol을 사용하게 되었습니다
+- 실제로 사용해보니 컴파일 경고가 나왔고 이후 버전에서도 테스트하기 어렵다고 판단했습니다.
+- 다른 방법을 찾다가 URLProtocol을 사용하게 되었습니다.
 
 #### 📖해결한 점
 ```swift
@@ -206,13 +224,12 @@ final class MockURLProtocolObject: URLProtocol {
     }
     
     override func stopLoading() {
-        
     }
     
 }
 ```
-- URLProtocol을 사용하여 네트워크의 요청 결과에 따른 코드 동작을 테스트를 하였습니다
-- MockURLProtocol을 구현하여 네트워크를 수행하는 객체(BoxofficeInfo)에 의존성 주입으로 URLSession을 넣어 구현하였습니다
+- URLProtocol을 사용하여 네트워크의 요청 결과에 따른 코드 동작을 테스트를 하였습니다.
+- MockURLProtocol을 구현하여 네트워크를 수행하는 객체(BoxofficeInfo)에 의존성 주입으로 URLSession을 넣어 구현하였습니다.
 
 ### 4️⃣ DataSource vs DiffableDataSource 어떤것을 사용할까?
 
@@ -224,14 +241,14 @@ final class MockURLProtocolObject: URLProtocol {
 [wwdc19 - Advances In UI Data Source](https://developer.apple.com/videos/play/wwdc2019/220)
 
 * 위 영상 내용을 참고했습니다.
-* DataSource와는 다르게 DiffableDataSource의 경우 아이템의 변화에따라 애니메이션이 추가된다는 점
-* IndexPath를 사용하던 DataSource와는 다르게 각각의 섹션과 아이템을 `Hashable`을 채택한 타입으로 서로 구별할 수 있어 이전에 IndexPath의 섹션과 아이템의 수에 따라서 변화를 주던 방식을 탈피할 수 있는 점 등
+* DataSource와는 다르게 DiffableDataSource의 경우 아이템의 변화에따라 애니메이션이 추가된다는 점이 있습니다.
+* IndexPath를 사용하던 DataSource와는 다르게 각각의 섹션과 아이템을 `Hashable`을 채택한 타입으로 서로 구별할 수 있어 이전에 IndexPath의 섹션과 아이템의 수에 따라서 변화를 주던 방식을 탈피할 수 있는 점 등이 있습니다.
 * 위 이유와 dataSource는 ios6, diffableDataSource는 ios13에서 사용 가능하여 비교적 최근꺼인 diffableDataSource를 사용하였습니다.
 
 ### 5️⃣ Snapshot 활용
 
 #### ❓문제점
-* 새로고침을 할 경우 기존 스냅샷에 있는 데이터와 같은 데이터가 들어와 `snapshot.appendItems(movieItems)`를 해줄 경우
+* 새로고침을 할 경우 기존 스냅샷에 있는 데이터와 같은 데이터가 들어와 `snapshot.appendItems(movieItems)`를 해줄 경우에
 
 ```
 Diffable data source detected an attempt to insert or append 10 item identifiers that already exist in the snapshot.......
@@ -256,7 +273,7 @@ private func applySnapshot() {
 ### 6️⃣ 어제 날짜를 출력하는 방법
 #### ❓문제점
 - Date()를 사용하면 오늘 날짜와 시간을 출력할 수 있었습니다.
-- 하지만 프로젝트에서는 시간을 제외한 `어제 날짜`를 출력해야 했습니다
+- 하지만 프로젝트에서는 시간을 제외한 `어제 날짜`를 출력해야 했습니다.
 - Date() 만을 사용하는 데에는 한계를 느껴서 찾아보던중 Calendar 구조체를 사용하였습니다.
 
 #### 📖해결법
@@ -337,41 +354,57 @@ private func stopLoading() {
 ```
 - `DispatchGroup`의 `notify`메소드를 통해 해당 그룹의 작업이 모두 끝나면 기존에 숨겨놨던 뷰를 다시 보여줌으로 동시에 UI가 보일 수 있게 구현하였습니다.
 
-### 9️⃣ 값을 가져오지 못하거나 값이 API문서에 없을 경우
-
+### 9️⃣ Extension과 convenience init를 사용한 반복 코드 줄이기
 #### ❓문제점
-![](https://i.imgur.com/CHJJna1.png)
-- 애니메이션은 배우 목록을 빈값이기 때문에 API문서를 읽어 올 경우 공백으로 UI가 출력되었습니다.
-- 감독이나 배우이름이 한글이 아닌 영어가 사용될 경우에도 공백으로 UI가 출력되었습니다.
+```swift
+let nameText = UILabel()
+text.numberOfLines = 0
+text.font = .boldSystemFont(ofSize: 12)
+text.translatesAutoresizingMaskIntoConstraints = false
+text.adjustsFontSizeToFitWidth = true
+text.adjustsFontForContentSizeCategory = true
+
+let rankingText = UILabel()
+text.numberOfLines = 0
+text.font = .boldSystemFont(ofSize: 12)
+text.translatesAutoresizingMaskIntoConstraints = false
+text.adjustsFontSizeToFitWidth = true
+text.adjustsFontForContentSizeCategory = true
+
+...
+```
+- 각각의 text마다 똑같은 옵션을 사용하는 경우가 많았습니다.
+- 동일한 코드가 많아짐으로써 코드 전체량이 많아지고 옵션값을 수정할 때마다 매번 각각의 Label로 가서 수정을 해주어야 했습니다.
 
 #### 📖해결법
-![](https://i.imgur.com/KzO6LWz.png)
-
 ```swift
-var directors: String {
-        let directorsName = data.directors.map { $0.name }
-        return directorsName.isEmpty ? "감독 정보 없음" : directorsName.joined(separator: ", ")
+extension UILabel {
+    convenience init(fontStyle: UIFont, numberOfLine: Int = 1) {
+        self.init()
+        
+        numberOfLines = numberOfLine
+        font = fontStyle
+        translatesAutoresizingMaskIntoConstraints = false
+        adjustsFontSizeToFitWidth = true
+        adjustsFontForContentSizeCategory = true
     }
-
-var actors: String {
-        let actors = data.actors.map { $0.name }
-        return actors.isEmpty ? "배우 정보 없음" : actors.joined(separator: ", ")
-    }
+}
 ```
-- 삼항연산자로 조건을 두어 빈값을 받아올 경우 공백이 아닌 정보가 없다는걸 Text로 표현해서 사용자경험을 향상하였습니다.
+- extension을 사용해 UILabel을 확장하여 여러곳에 사용할 수 있도록 하였습니다.
+
+
 
 ## 6. Reference
 - [Apple Developer: URLSession](https://developer.apple.com/documentation/foundation/urlsession)
 - [Apple Developer: Fetching Website Data into Memory](https://developer.apple.com/documentation/foundation/url_loading_system/fetching_website_data_into_memory)
 - [Apple Developer: UICollectionView](https://developer.apple.com/documentation/uikit/uicollectionview)
-- [Apple Developer: Modern cell configuration](https://developer.apple.com/videos/play/wwdc2020/10027/)
-- [Apple Developer: Lists in UICollectionView](https://developer.apple.com/videos/play/wwdc2020/10026)
 - [Apple Developer: Implementing Modern Collection Views](https://developer.apple.com/documentation/uikit/views_and_controls/collection_views/implementing_modern_collection_views)
-- [Apple Developer: Entering data](https://developer.apple.com/design/human-interface-guidelines/patterns/entering-data/)
+- [Apple Developer - CellRegistration](https://developer.apple.com/documentation/uikit/uicollectionview/cellregistration)
 - [Apple Developer: UIAlertController](https://developer.apple.com/documentation/uikit/uialertcontroller)
 - [Apple Developer: URLProtocol](https://developer.apple.com/documentation/foundation/urlprotocol)
-- [Apple Developer: Advances in UI Data Sources](https://developer.apple.com/videos/play/wwdc2019/220)
 - [Apple Developer: Calendar](https://developer.apple.com/documentation/foundation/calendar)
-- [Apple Developer: Coredata](https://developer.apple.com/documentation/coredata)
-- [Apple Developer: URLChache](https://developer.apple.com/documentation/foundation/urlcache)
-- [Apple Developer: Typography](https://developer.apple.com/design/human-interface-guidelines/foundations/typography/)
+- [Apple HIG: Typography](https://developer.apple.com/design/human-interface-guidelines/foundations/typography/)
+- [Apple HIG: Entering data](https://developer.apple.com/design/human-interface-guidelines/patterns/entering-data/)
+- [WWDC2019: Advances in UI Data Sources](https://developer.apple.com/videos/play/wwdc2019/220)
+- [WWDC2020: Modern cell configuration](https://developer.apple.com/videos/play/wwdc2020/10027/)
+- [WWDC2020: Lists in UICollectionView](https://developer.apple.com/videos/play/wwdc2020/10026)
