@@ -5,7 +5,7 @@
 //  Created by Andrew, 레옹아범 on 2023/03/28.
 //
 
-import Foundation
+import UIKit
 
 final class BoxofficeInfo<T> {
     private let apiType: APIType
@@ -67,5 +67,25 @@ final class BoxofficeInfo<T> {
                 handler(.failure(error))
             }
         }
+    }
+    
+    func fetchImage(url: URL, handler: @escaping (Result<UIImage, BoxofficeError>) -> Void) {
+        guard let request = makeRequest(url: url) else {
+            handler(.failure(.urlError))
+            return
+        }
+        
+        task = model.search(request: request, completion: { result in
+            switch result {
+            case .success(let data):
+                guard let image = UIImage(data: data) else {
+                    handler(.failure(.decodingError))
+                    return
+                }
+                handler(.success(image))
+            case .failure(let error):
+                handler(.failure(error))
+            }
+        })
     }
 }

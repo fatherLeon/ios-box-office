@@ -54,16 +54,13 @@ final class MovieDescManager {
             return
         }
         
-        do {
-            let imageData = try Data(contentsOf: url)
-            guard let image = UIImage(data: imageData) else {
-                handler(.failure(.decodingError))
-                return
+        movieImage.fetchImage(url: url) { result in
+            switch result {
+            case .success(let image):
+                handler(.success((image, imageSize)))
+            case .failure(let error):
+                handler(.failure(error))
             }
-            
-            handler(.success((image, imageSize)))
-        } catch {
-            handler(.failure(.responseError))
         }
     }
 }
