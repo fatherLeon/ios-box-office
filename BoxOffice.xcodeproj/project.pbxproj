@@ -230,8 +230,6 @@
 		63DF20E22970E1A0005DF7D1 = {
 			isa = PBXGroup;
 			children = (
-				71C59E3529D41AFA0016E247 /* View */,
-				71C59E3429D41AF30016E247 /* Controller */,
 				63DF20ED2970E1A0005DF7D1 /* BoxOffice */,
 				7113201D29C8331000B5A9DB /* MovieInfoTests */,
 				26D7C88529CAC1AF00B67672 /* BoxofficeInfoTests */,
@@ -252,6 +250,8 @@
 		63DF20ED2970E1A0005DF7D1 /* BoxOffice */ = {
 			isa = PBXGroup;
 			children = (
+				71C59E3429D41AF30016E247 /* Controller */,
+				71C59E3529D41AFA0016E247 /* View */,
 				715553DD29D30E5800B7FC3D /* Protocol */,
 				26B1733529C8456E0086B7CA /* Extension */,
 				7113202529C8331E00B5A9DB /* Model */,

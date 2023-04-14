@@ -7,8 +7,30 @@
 
 import Foundation
 
+class Cache {
+    
+    static let `default` = Cache(urlCache: .shared)
+    
+    private let urlCache: URLCache
+    
+    init(urlCache: URLCache) {
+        self.urlCache = urlCache
+    }
+    
+    func save(cachedResponse: CachedURLResponse, request: URLRequest) {
+        urlCache.storeCachedResponse(cachedResponse, for: request)
+    }
+    
+    func search(request: URLRequest) -> CachedURLResponse? {
+        let storedCache = urlCache.cachedResponse(for: request)
+        
+        return storedCache
+    }
+}
+
 struct NetworkModel: NetworkingProtocol {
     private let session: URLSession
+    private let cache = Cache.default
     
     init(session: URLSession) {
         self.session = session
@@ -21,7 +43,8 @@ struct NetworkModel: NetworkingProtocol {
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse,
+            guard let response = response,
+                  let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
                 completion(.failure(.responseError))
                 return
@@ -31,10 +54,19 @@ struct NetworkModel: NetworkingProtocol {
                 completion(.failure(.incorrectDataTypeError))
                 return
             }
+            
+            let cahcedResponse = CachedURLResponse(response: response, data: data)
+            cache.save(cachedResponse: cahcedResponse, request: request)
+            
             completion(.success(data))
         }
         
-        task.resume()
+        guard let storedData = cache.search(request: request) else {
+            task.resume()
+            return task
+        }
+        
+        completion(.success(storedData.data))
         
         return task
     }
