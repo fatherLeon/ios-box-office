@@ -9,6 +9,7 @@ import Foundation
 
 struct NetworkModel: NetworkingProtocol {
     private let session: URLSession
+    private let cache = Cache.shared
     
     init(session: URLSession) {
         self.session = session
@@ -34,11 +35,36 @@ struct NetworkModel: NetworkingProtocol {
             }
             
             let cahcedResponse = CachedURLResponse(response: response, data: data)
+            cache.save(response: cahcedResponse, request: request)
             completion(.success(data))
         }
         
-        task.resume()
+        guard let searchData = cache.search(urlRequest: request) else {
+            task.resume()
+            return task
+        }
 
+        completion(.success(searchData.data))
         return task
     }
+}
+
+class Cache {
+    static let shared = Cache(urlCache: .shared)
+    let urlCache: URLCache
+    
+    init(urlCache: URLCache) {
+        self.urlCache = urlCache
+    }
+    
+    func search(urlRequest: URLRequest) -> CachedURLResponse? {
+        let cache = urlCache.cachedResponse(for: urlRequest)
+        
+        return cache
+    }
+    
+    func save(response: CachedURLResponse, request: URLRequest) {
+        urlCache.storeCachedResponse(response, for: request)
+    }
+    
 }
