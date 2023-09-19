@@ -8,15 +8,9 @@
 import UIKit
 
 final class MovieRankingViewController: UIViewController {
-    // MARK: Propertie
-    private var rankingViewType: RankingViewType = .list
-    private var dataManager: RankingManager?
-    private var boxofficeDate = {
-        guard let boxofficeDate = Date.yesterday else {
-            return Date()
-        }
-        return boxofficeDate
-    }()
+    
+    // MARK: ViewModel
+    private let viewModel = MovieRankingViewModel()
     
     // MARK: UI Properties
     private let loadingView = UIActivityIndicatorView()
@@ -28,30 +22,25 @@ final class MovieRankingViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        createDataManager()
         configureUI()
         configureNavigationTitle()
         startLoadingView()
         fetchBoxofficeData()
     }
     
-    private func createDataManager() {
-        dataManager = RankingManager(date: boxofficeDate)
-    }
-    
     private func fetchBoxofficeData() {
-        dataManager?.fetchRanking(handler: { [weak self] result in
+        viewModel.fetchBoxofficeData { [weak self] result in
             switch result {
             case .success(_):
                 DispatchQueue.main.async {
                     self?.stopLoadingView()
                     self?.collectionView?.refreshControl?.endRefreshing()
-                    self?.applySnapshot(section: self?.rankingViewType)
+                    self?.applySnapshot(section: self?.viewModel.rankingViewType)
                 }
             case .failure(let error):
                 self?.presentErrorAlert(error: error, title: "박스오피스")
             }
-        })
+        }
     }
 
     private func startLoadingView() {
@@ -70,7 +59,7 @@ final class MovieRankingViewController: UIViewController {
         let calendarVC = CalendarViewController()
         
         calendarVC.delegate = self
-        calendarVC.selectedDate = boxofficeDate
+        calendarVC.selectedDate = viewModel.boxofficeDate
         
         present(calendarVC, animated: true)
     }
@@ -79,21 +68,21 @@ final class MovieRankingViewController: UIViewController {
         let alert = UIAlertController(title: "화면모드변경",
                                       message: nil,
                                       preferredStyle: .actionSheet)
-        let alertAction = UIAlertAction(title: rankingViewType.anotherTitle, style: .default, handler: { [weak self] _ in
-            self?.deleteSnapshot(by: self?.rankingViewType)
-            switch self?.rankingViewType {
+        let alertAction = UIAlertAction(title: viewModel.rankingViewType.anotherTitle, style: .default, handler: { [weak self] _ in
+            self?.deleteSnapshot(by: self?.viewModel.rankingViewType)
+            switch self?.viewModel.rankingViewType {
             case .list:
                 guard let iconLayout = self?.makeCollectionViewIconLayout() else { return }
-                self?.rankingViewType = .icon
+                self?.viewModel.rankingViewType = .icon
                 self?.changeCollectionViewLayout(layout: iconLayout)
             case .icon:
                 guard let listLayout = self?.makeCollectionViewListLayout() else { return }
-                self?.rankingViewType = .list
+                self?.viewModel.rankingViewType = .list
                 self?.changeCollectionViewLayout(layout: listLayout)
             default:
                 return
             }
-            self?.applySnapshot(section: self?.rankingViewType)
+            self?.applySnapshot(section: self?.viewModel.rankingViewType)
         })
         let cancelAction = UIAlertAction(title: "취소", style: .cancel)
         
@@ -107,8 +96,7 @@ final class MovieRankingViewController: UIViewController {
 extension MovieRankingViewController: ChangedDateDelegate {
     func changeDate(_ date: Date) {
         startLoadingView()
-        boxofficeDate = date
-        createDataManager()
+        viewModel.boxofficeDate = date
         configureNavigationTitle()
         fetchBoxofficeData()
     }
@@ -117,7 +105,7 @@ extension MovieRankingViewController: ChangedDateDelegate {
 // MARK: Delegate
 extension MovieRankingViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let movieItem = dataManager?.movieItems[indexPath.row] else { return }
+        guard let movieItem = viewModel.dataManager?.movieItems[indexPath.row] else { return }
         let nextViewController = MovieDetailViewController()
         
         nextViewController.movieName = movieItem.name
@@ -130,7 +118,7 @@ extension MovieRankingViewController: UICollectionViewDelegate {
 // MARK: UI
 extension MovieRankingViewController {
     private func configureNavigationTitle() {
-        navigationItem.title = dataManager?.navigationTitleText
+        navigationItem.title = viewModel.dataManager?.navigationTitleText
     }
     
     private func makeCollectionViewListLayout() -> UICollectionViewCompositionalLayout {
@@ -161,7 +149,7 @@ extension MovieRankingViewController {
     }
         
     private func applySnapshot(section: RankingViewType?) {
-        guard let dataManager = dataManager,
+        guard let dataManager = viewModel.dataManager,
               let section = section else { return }
         
         var snapshot = NSDiffableDataSourceSnapshot<RankingViewType, InfoObject>()
@@ -255,7 +243,7 @@ extension MovieRankingViewController {
         }
         
         dataSource = UICollectionViewDiffableDataSource<RankingViewType, InfoObject>(collectionView: collectionView, cellProvider: { [self] collectionView, indexPath, itemIdentifier in
-            switch self.rankingViewType {
+            switch viewModel.rankingViewType {
             case .icon:
                 return collectionView.dequeueConfiguredReusableCell(using: iconCellRegistration, for: indexPath, item: itemIdentifier)
             case .list:

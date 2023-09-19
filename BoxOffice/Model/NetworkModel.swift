@@ -49,7 +49,7 @@ struct NetworkModel: NetworkingProtocol {
     }
 }
 
-class Cache {
+final class Cache {
     static let shared = Cache(urlCache: .shared)
     let urlCache: URLCache
     

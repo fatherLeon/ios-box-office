@@ -7,7 +7,7 @@
 
 import Foundation
 
-class RankingManager {
+final class RankingManager {
     private let date: Date
     private let boxofficeInfo: BoxofficeInfo<DailyBoxofficeObject>
     let apiType: APIType
