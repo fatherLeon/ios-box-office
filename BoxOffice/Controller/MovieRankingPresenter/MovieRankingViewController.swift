@@ -108,9 +108,6 @@ extension MovieRankingViewController: UICollectionViewDelegate {
         guard let movieItem = viewModel.dataManager?.movieItems[indexPath.row] else { return }
         let nextViewController = MovieDetailViewController(movieName: movieItem.name, movieCode: movieItem.code)
         
-        nextViewController.movieName = movieItem.name
-        nextViewController.movieCode = movieItem.code
-        
         navigationController?.pushViewController(nextViewController, animated: true)
     }
 }

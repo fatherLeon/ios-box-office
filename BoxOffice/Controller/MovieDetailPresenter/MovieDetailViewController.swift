@@ -9,10 +9,10 @@ import UIKit
 
 final class MovieDetailViewController: UIViewController {
     
+    // MARK: ViewModel
+    private let viewModel: MovieDetailViewModel
+    
     // MARK: - Properties
-    var movieName: String
-    var movieCode: String
-    private var dataManager: MovieDescManager?
     private let dispatchGroup = DispatchGroup()
     
     // MARK: - UI Properties
@@ -35,8 +35,7 @@ final class MovieDetailViewController: UIViewController {
     private let loadingView = UIActivityIndicatorView()
     
     init(movieName: String, movieCode: String) {
-        self.movieName = movieName
-        self.movieCode = movieCode
+        self.viewModel = MovieDetailViewModel(movieName: movieName, movieCode: movieCode)
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -47,7 +46,6 @@ final class MovieDetailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        createMovieDescManager()
         configureUI()
         startLoading()
         fetchImage()
@@ -55,14 +53,10 @@ final class MovieDetailViewController: UIViewController {
         stopLoading()
     }
     
-    private func createMovieDescManager() {
-        self.dataManager = MovieDescManager(movieCode: movieCode, movieName: movieName)
-    }
-    
     private func fetchData() {
         dispatchGroup.enter()
         
-        dataManager?.boxofficeInfo.fetchData { [weak self] result in
+        viewModel.fetchData { [weak self] result in
             switch result {
             case .success(let data):
                 let infoUIModel = MovieInfoUIModel(data: data.movieInfoResult.movieInfo)
@@ -81,7 +75,7 @@ final class MovieDetailViewController: UIViewController {
     private func fetchImage() {
         dispatchGroup.enter()
         
-        dataManager?.fetchMoviePosterImage { [weak self] result in
+        viewModel.fetchImage { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success((let image, let imageSize)):
@@ -94,7 +88,7 @@ final class MovieDetailViewController: UIViewController {
             }
         }
     }
-        
+    
     private func startLoading() {
         loadingView.startAnimating()
         posterImageView.isHidden = true
@@ -121,7 +115,7 @@ extension MovieDetailViewController {
     
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = movieName
+        navigationItem.title = viewModel.movieName
         
         configureScrollView()
         configurePosterImageView()
