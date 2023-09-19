@@ -10,8 +10,8 @@ import UIKit
 final class MovieDetailViewController: UIViewController {
     
     // MARK: - Properties
-    var movieName: String = ""
-    var movieCode: String = ""
+    var movieName: String
+    var movieCode: String
     private var dataManager: MovieDescManager?
     private let dispatchGroup = DispatchGroup()
     
@@ -33,6 +33,17 @@ final class MovieDetailViewController: UIViewController {
     
     private let descStackView = DescStackView()
     private let loadingView = UIActivityIndicatorView()
+    
+    init(movieName: String, movieCode: String) {
+        self.movieName = movieName
+        self.movieCode = movieCode
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

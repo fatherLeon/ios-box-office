@@ -8,5 +8,11 @@
 import Foundation
 
 final class MovieDetailViewModel {
+    private let movieName: String
+    private let movieCode: String
     
+    init(movieName: String, movieCode: String) {
+        self.movieName = movieName
+        self.movieCode = movieCode
+    }
 }

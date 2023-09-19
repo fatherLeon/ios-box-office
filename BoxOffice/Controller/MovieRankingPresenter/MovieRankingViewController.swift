@@ -106,7 +106,7 @@ extension MovieRankingViewController: ChangedDateDelegate {
 extension MovieRankingViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let movieItem = viewModel.dataManager?.movieItems[indexPath.row] else { return }
-        let nextViewController = MovieDetailViewController()
+        let nextViewController = MovieDetailViewController(movieName: movieItem.name, movieCode: movieItem.code)
         
         nextViewController.movieName = movieItem.name
         nextViewController.movieCode = movieItem.code
