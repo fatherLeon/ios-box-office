@@ -5,6 +5,7 @@
 //  Created by Andrew, 레옹아범 on 2023/03/22.
 //
 
+import RxSwift
 import Foundation
 
 struct NetworkModel: NetworkingProtocol {
@@ -14,6 +15,7 @@ struct NetworkModel: NetworkingProtocol {
         self.session = session
     }
     
+    @discardableResult
     func search(request: URLRequest, completion: @escaping (Result<Data, BoxofficeError>) -> Void) -> URLSessionDataTask {
         let task = session.dataTask(with: request) { data, response, error in
             if let boxofficeError = checkError(response, error) {
@@ -45,5 +47,21 @@ struct NetworkModel: NetworkingProtocol {
         }
         
         return nil
+    }
+    
+    func searchByRx(_ request: URLRequest) -> Observable<Data> {
+        return Observable.create { observer in
+            search(request: request) { event in
+                switch event {
+                case .success(let data):
+                    observer.onNext(data)
+                    observer.onCompleted()
+                case .failure(let error):
+                    observer.onError(error)
+                }
+            }
+            
+            return Disposables.create()
+        }
     }
 }
