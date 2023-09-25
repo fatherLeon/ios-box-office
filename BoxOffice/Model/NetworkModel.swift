@@ -9,7 +9,6 @@ import Foundation
 
 struct NetworkModel: NetworkingProtocol {
     private let session: URLSession
-    private let cache = Cache.shared
     
     init(session: URLSession) {
         self.session = session
@@ -17,15 +16,8 @@ struct NetworkModel: NetworkingProtocol {
     
     func search(request: URLRequest, completion: @escaping (Result<Data, BoxofficeError>) -> Void) -> URLSessionDataTask {
         let task = session.dataTask(with: request) { data, response, error in
-            guard error == nil else {
-                completion(.failure(.sessionError))
-                return
-            }
-            
-            guard let response = response,
-                  let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                completion(.failure(.responseError))
+            if let boxofficeError = checkError(response, error) {
+                completion(.failure(boxofficeError))
                 return
             }
             
@@ -33,38 +25,25 @@ struct NetworkModel: NetworkingProtocol {
                 completion(.failure(.incorrectDataTypeError))
                 return
             }
-            
-            let cahcedResponse = CachedURLResponse(response: response, data: data)
-            cache.save(response: cahcedResponse, request: request)
             completion(.success(data))
         }
         
-        guard let searchData = cache.search(urlRequest: request) else {
-            task.resume()
-            return task
-        }
-
-        completion(.success(searchData.data))
+        task.resume()
+        
         return task
     }
-}
-
-final class Cache {
-    static let shared = Cache(urlCache: .shared)
-    let urlCache: URLCache
     
-    init(urlCache: URLCache) {
-        self.urlCache = urlCache
-    }
-    
-    func search(urlRequest: URLRequest) -> CachedURLResponse? {
-        let cache = urlCache.cachedResponse(for: urlRequest)
+    func checkError(_ response: URLResponse?, _ error: Error?) -> BoxofficeError? {
+        guard error == nil else {
+            return .sessionError
+        }
         
-        return cache
+        guard let response = response,
+              let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            return .responseError
+        }
+        
+        return nil
     }
-    
-    func save(response: CachedURLResponse, request: URLRequest) {
-        urlCache.storeCachedResponse(response, for: request)
-    }
-    
 }
