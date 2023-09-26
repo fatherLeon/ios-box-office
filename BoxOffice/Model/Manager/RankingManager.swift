@@ -5,6 +5,7 @@
 //  Created by 레옹아범 ,Andrew on 2023/03/31.
 //
 
+import RxSwift
 import Foundation
 
 final class RankingManager {
@@ -34,5 +35,13 @@ final class RankingManager {
                 handler(.failure(error))
             }
         }
+    }
+    
+    func fetchRankingByRx() -> Observable<[InfoObject]> {
+        return boxofficeInfo.fetchDataByRx(by: DailyBoxofficeObject.self)
+            .map { data in
+                return data.boxOfficeResult.movies
+            }
+            .asObservable()
     }
 }

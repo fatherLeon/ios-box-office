@@ -24,4 +24,8 @@ final class MovieRankingViewModel {
     func fetchBoxofficeData(_ handler: @escaping (Result<[InfoObject], Error>) -> Void) {
         dataManager?.fetchRanking(handler: handler)
     }
+    
+    func fetchBoxofficeDataByRx() {
+        dataManager
+    }
 }
