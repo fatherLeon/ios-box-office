@@ -14,10 +14,6 @@ final class RankingManager {
     let apiType: APIType
     var movieItems: [InfoObject] = []
     
-    var navigationTitleText: String {
-        return Date.dateFormatter.string(from: date)
-    }
-    
     init(date: Date) {
         let dataText = Date.apiDateFormatter.string(from: date)
         self.date = date

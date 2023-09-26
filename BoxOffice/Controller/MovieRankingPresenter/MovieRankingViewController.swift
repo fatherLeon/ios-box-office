@@ -49,6 +49,14 @@ final class MovieRankingViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+        
+        collectionView?.rx.modelSelected(InfoObject.self)
+            .subscribe(onNext: { data in
+                let nextViewController = MovieDetailViewController(movieName: data.name, movieCode: data.code)
+                
+                self.navigationController?.pushViewController(nextViewController, animated: true)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func fetchBoxofficeData() {
@@ -115,7 +123,7 @@ extension MovieRankingViewController: ChangedDateDelegate {
 // MARK: UI
 extension MovieRankingViewController {
     private func configureNavigationTitle() {
-        navigationItem.title = viewModel.dataManager?.navigationTitleText
+        navigationItem.title = viewModel.navigationTitleText
     }
     
     private func makeCollectionViewListLayout() -> UICollectionViewCompositionalLayout {

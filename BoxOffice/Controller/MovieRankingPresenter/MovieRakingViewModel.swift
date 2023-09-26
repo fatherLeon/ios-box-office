@@ -11,7 +11,7 @@ import Foundation
 
 final class MovieRankingViewModel {
     var rankingViewType: RankingViewType = .list
-    var dataManager: RankingManager?
+    private var dataManager: RankingManager?
     var rankingData: BehaviorRelay<[InfoObject]> = BehaviorRelay(value: [])
     var isFetching: BehaviorSubject<Bool> = BehaviorSubject(value: false)
     var disposeBag = DisposeBag()
@@ -19,6 +19,9 @@ final class MovieRankingViewModel {
         didSet {
             dataManager = RankingManager(date: boxofficeDate)
         }
+    }
+    var navigationTitleText: String {
+        return Date.dateFormatter.string(from: self.boxofficeDate)
     }
     
     init() {
