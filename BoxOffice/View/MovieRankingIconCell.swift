@@ -8,6 +8,9 @@
 import UIKit
 
 final class MovieRankingIconCell: UICollectionViewCell {
+    
+    static let identifier = "MovieRankingIconCell"
+    
     // MARK: UI Properties
     private let mainStackView = UIStackView()
     

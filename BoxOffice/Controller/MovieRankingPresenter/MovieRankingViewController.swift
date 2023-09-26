@@ -6,41 +6,53 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 final class MovieRankingViewController: UIViewController {
     
     // MARK: ViewModel
     private let viewModel = MovieRankingViewModel()
+    private var disposeBag = DisposeBag()
     
     // MARK: UI Properties
     private let loadingView = UIActivityIndicatorView()
     private let refreshController = UIRefreshControl()
     private var collectionView: UICollectionView?
     
-    // MARK: DataSource Properties
-    private var dataSource: UICollectionViewDiffableDataSource<RankingViewType, InfoObject>?
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         configureNavigationTitle()
         startLoadingView()
+        binding()
         fetchBoxofficeData()
     }
     
-    private func fetchBoxofficeData() {
-        viewModel.fetchBoxofficeData { [weak self] result in
-            switch result {
-            case .success(_):
-                DispatchQueue.main.async {
-                    self?.stopLoadingView()
-                    self?.collectionView?.refreshControl?.endRefreshing()
-                    self?.applySnapshot(section: self?.viewModel.rankingViewType)
-                }
-            case .failure(let error):
-                self?.presentErrorAlert(error: error, title: "박스오피스")
+    private func binding() {
+        viewModel.rankingData
+            .bind(to: self.collectionView!.rx.items(cellIdentifier: "MovieRankingListCell", cellType: MovieRankingListCell.self)) { (index, data, cell) in
+                let uiModel = CellUIModel(data: data)
+                
+                cell.updateLabelText(for: uiModel)
             }
-        }
+            .disposed(by: disposeBag)
+        
+        viewModel.isFetching
+            .subscribe(on: MainScheduler.instance)
+            .subscribe { value in
+                if value {
+                    DispatchQueue.main.async {
+                        self.stopLoadingView()
+                        self.collectionView?.refreshControl?.endRefreshing()
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    private func fetchBoxofficeData() {
+        viewModel.fetchBoxofficeDataByRx()
     }
 
     private func startLoadingView() {
@@ -69,7 +81,6 @@ final class MovieRankingViewController: UIViewController {
                                       message: nil,
                                       preferredStyle: .actionSheet)
         let alertAction = UIAlertAction(title: viewModel.rankingViewType.anotherTitle, style: .default, handler: { [weak self] _ in
-            self?.deleteSnapshot(by: self?.viewModel.rankingViewType)
             switch self?.viewModel.rankingViewType {
             case .list:
                 guard let iconLayout = self?.makeCollectionViewIconLayout() else { return }
@@ -82,7 +93,6 @@ final class MovieRankingViewController: UIViewController {
             default:
                 return
             }
-            self?.applySnapshot(section: self?.viewModel.rankingViewType)
         })
         let cancelAction = UIAlertAction(title: "취소", style: .cancel)
         
@@ -99,16 +109,6 @@ extension MovieRankingViewController: ChangedDateDelegate {
         viewModel.boxofficeDate = date
         configureNavigationTitle()
         fetchBoxofficeData()
-    }
-}
-
-// MARK: Delegate
-extension MovieRankingViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let movieItem = viewModel.dataManager?.movieItems[indexPath.row] else { return }
-        let nextViewController = MovieDetailViewController(movieName: movieItem.name, movieCode: movieItem.code)
-        
-        navigationController?.pushViewController(nextViewController, animated: true)
     }
 }
 
@@ -144,40 +144,20 @@ extension MovieRankingViewController {
     private func changeCollectionViewLayout(layout: UICollectionViewCompositionalLayout) {
         collectionView?.setCollectionViewLayout(layout, animated: true)
     }
-        
-    private func applySnapshot(section: RankingViewType?) {
-        guard let dataManager = viewModel.dataManager,
-              let section = section else { return }
-        
-        var snapshot = NSDiffableDataSourceSnapshot<RankingViewType, InfoObject>()
-    
-        snapshot.appendSections([section])
-        snapshot.appendItems(dataManager.movieItems)
-        
-        dataSource?.apply(snapshot, animatingDifferences: true)
-    }
-    
-    private func deleteSnapshot(by section: RankingViewType?) {
-        guard var snapshot = dataSource?.snapshot(),
-              let section = section else { return }
-        
-        snapshot.deleteSections([section])
-        
-        dataSource?.apply(snapshot)
-    }
     
     private func configureUI() {
         view.backgroundColor = .systemBackground
         
         let layout = makeCollectionViewListLayout()
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView?.register(MovieRankingListCell.self, forCellWithReuseIdentifier: "MovieRankingListCell")
+        collectionView?.register(MovieRankingIconCell.self, forCellWithReuseIdentifier: "MovieRankingIconCell")
         
         configureCollectionViewLayout()
         configureLoadingView()
         configureNavigationItems()
         configureRefreshController()
         createToolbar()
-        createDataSource()
     }
     
     private func configureCollectionViewLayout() {
@@ -186,7 +166,6 @@ extension MovieRankingViewController {
         view.addSubview(collectionView)
         
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.delegate = self
         
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -220,32 +199,5 @@ extension MovieRankingViewController {
         let barButtonItem = UIBarButtonItem(title: "화면 전환", style: .plain, target: self, action: #selector(didTapChangedScreenButton))
         
         setToolbarItems([flexibleItem, barButtonItem, flexibleItem], animated: true)
-    }
-    
-    private func createDataSource() {
-        guard let collectionView = self.collectionView else { return }
-        
-        let listCellRegistration = UICollectionView.CellRegistration<MovieRankingListCell, InfoObject> { cell, indexPath, item in
-            
-            let uiModel = CellUIModel(data: item)
-            
-            cell.updateLabelText(for: uiModel)
-        }
-        
-        let iconCellRegistration = UICollectionView.CellRegistration<MovieRankingIconCell, InfoObject> { cell, indexPath, item in
-            
-            let uiModel = CellUIModel(data: item)
-            
-            cell.updateLabelText(for: uiModel)
-        }
-        
-        dataSource = UICollectionViewDiffableDataSource<RankingViewType, InfoObject>(collectionView: collectionView, cellProvider: { [self] collectionView, indexPath, itemIdentifier in
-            switch viewModel.rankingViewType {
-            case .icon:
-                return collectionView.dequeueConfiguredReusableCell(using: iconCellRegistration, for: indexPath, item: itemIdentifier)
-            case .list:
-                return collectionView.dequeueConfiguredReusableCell(using: listCellRegistration, for: indexPath, item: itemIdentifier)
-            }
-        })
     }
 }

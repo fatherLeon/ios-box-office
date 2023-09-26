@@ -5,11 +5,16 @@
 //  Created by 강민수 on 2023/09/19.
 //
 
+import RxSwift
+import RxRelay
 import Foundation
 
 final class MovieRankingViewModel {
     var rankingViewType: RankingViewType = .list
     var dataManager: RankingManager?
+    var rankingData: BehaviorRelay<[InfoObject]> = BehaviorRelay(value: [])
+    var isFetching: BehaviorSubject<Bool> = BehaviorSubject(value: false)
+    var disposeBag = DisposeBag()
     var boxofficeDate: Date {
         didSet {
             dataManager = RankingManager(date: boxofficeDate)
@@ -19,6 +24,17 @@ final class MovieRankingViewModel {
     init() {
         self.boxofficeDate = Date.yesterday ?? Date()
         dataManager = RankingManager(date: boxofficeDate)
+        
+        rankingData
+            .map { data in
+                if data.count > 0 {
+                    return true
+                } else {
+                    return false
+                }
+            }
+            .bind(to: isFetching)
+            .disposed(by: disposeBag)
     }
     
     func fetchBoxofficeData(_ handler: @escaping (Result<[InfoObject], Error>) -> Void) {
@@ -26,6 +42,11 @@ final class MovieRankingViewModel {
     }
     
     func fetchBoxofficeDataByRx() {
-        dataManager
+        guard let manager = dataManager else { return }
+        
+        manager.fetchRankingByRx()
+            .take(1)
+            .bind(to: rankingData)
+            .disposed(by: self.disposeBag)
     }
 }

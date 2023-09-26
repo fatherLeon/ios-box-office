@@ -91,30 +91,22 @@ final class BoxofficeInfo<T> {
     }
     
     func fetchDataByRx(by type: T.Type) -> Observable<T> where T: Decodable {
-        return Observable.create { observer in
-            guard let url = self.apiType.receiveUrl(),
-                  let request = self.makeRequest(url: url) else {
-                observer.onError(BoxofficeError.urlError)
-                return Disposables.create()
-            }
-            
-            let observable = self.model.searchByRx(request)
-                .take(1)
-                .map { data in
-                    let jsonDecoder = JSONDecoder()
-                    
-                    guard let decodingData = try? jsonDecoder.decode(type, from: data) else {
-                        observer.onError(BoxofficeError.decodingError)
-                        
-                        return
-                    }
-                    
-                    observer.onNext(decodingData)
-                    observer.onCompleted()
+        let url = apiType.receiveUrl()!
+        let request = makeRequest(url: url)!
+        
+        let observable = model.searchByRx(request)
+            .take(1)
+            .map { data in
+                let jsonDecoder = JSONDecoder()
+                
+                guard let decodingData = try? jsonDecoder.decode(type, from: data) else {
+                    throw BoxofficeError.decodingError
                 }
-            
-            return Disposables.create()
-        }
+                
+                return decodingData
+            }
+        
+        return observable
     }
     
     func fetchImageByRx(url: URL) -> Observable<UIImage> {
