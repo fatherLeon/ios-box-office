@@ -25,11 +25,11 @@ final class MovieRankingViewController: UIViewController {
         configureUI()
         configureNavigationTitle()
         startLoadingView()
-        binding()
+        bindingByUiComponents()
         fetchBoxofficeData()
     }
     
-    private func binding() {
+    private func bindingByUiComponents() {
         viewModel.rankingData
             .bind(to: self.collectionView!.rx.items(cellIdentifier: "MovieRankingListCell", cellType: MovieRankingListCell.self)) { (index, data, cell) in
                 let uiModel = CellUIModel(data: data)
@@ -40,7 +40,7 @@ final class MovieRankingViewController: UIViewController {
         
         viewModel.isFetching
             .observe(on: MainScheduler.instance)
-            .subscribe { value in
+            .subscribe { _ in
                 self.stopLoadingView()
                 self.collectionView?.refreshControl?.endRefreshing()
             }
@@ -55,7 +55,7 @@ final class MovieRankingViewController: UIViewController {
             .disposed(by: disposeBag)
         
         navigationItem.rightBarButtonItem?.rx.tap
-            .subscribe(onNext: { event in
+            .subscribe(onNext: { _ in
                 let calendarVC = CalendarViewController()
                 
                 calendarVC.delegate = self
@@ -63,6 +63,12 @@ final class MovieRankingViewController: UIViewController {
                 
                 self.present(calendarVC, animated: true)
             })
+            .disposed(by: disposeBag)
+        
+        refreshController.rx.controlEvent(.valueChanged)
+            .subscribe { _ in
+                self.fetchBoxofficeData()
+            }
             .disposed(by: disposeBag)
     }
     
@@ -76,19 +82,6 @@ final class MovieRankingViewController: UIViewController {
     
     private func stopLoadingView() {
         self.loadingView.stopAnimating()
-    }
-    
-    @objc private func refreshCollectionView() {
-        self.fetchBoxofficeData()
-    }
-
-    @objc private func didTapDateSelectionButton() {
-        let calendarVC = CalendarViewController()
-        
-        calendarVC.delegate = self
-        calendarVC.selectedDate = viewModel.boxofficeDate
-        
-        present(calendarVC, animated: true)
     }
     
     @objc private func didTapChangedScreenButton() {
@@ -203,7 +196,6 @@ extension MovieRankingViewController {
     }
     
     private func configureRefreshController() {
-        refreshController.addTarget(self, action: #selector(refreshCollectionView), for: .valueChanged)
         collectionView?.refreshControl = refreshController
     }
         
