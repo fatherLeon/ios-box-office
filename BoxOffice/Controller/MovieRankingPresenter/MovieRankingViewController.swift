@@ -18,6 +18,7 @@ final class MovieRankingViewController: UIViewController {
     // MARK: UI Properties
     private let loadingView = UIActivityIndicatorView()
     private let refreshController = UIRefreshControl()
+    private let changedSceneBarButtonItem = UIBarButtonItem()
     private var collectionView: UICollectionView?
     
     override func viewDidLoad() {
@@ -70,6 +71,12 @@ final class MovieRankingViewController: UIViewController {
                 self.fetchBoxofficeData()
             }
             .disposed(by: disposeBag)
+        
+        changedSceneBarButtonItem.rx.tap
+            .subscribe { _ in
+                self.showChangeScreenModeAlert()
+            }
+            .disposed(by: disposeBag)
     }
     
     private func fetchBoxofficeData() {
@@ -84,7 +91,7 @@ final class MovieRankingViewController: UIViewController {
         self.loadingView.stopAnimating()
     }
     
-    @objc private func didTapChangedScreenButton() {
+    private func showChangeScreenModeAlert() {
         let alert = UIAlertController(title: "화면모드변경",
                                       message: nil,
                                       preferredStyle: .actionSheet)
@@ -192,7 +199,13 @@ extension MovieRankingViewController {
     
     private func configureNavigationItems() {
         configureNavigationTitle()
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "날짜 선택", style: .plain, target: self, action: nil)
+        
+        let rightBarButtonItem = UIBarButtonItem()
+        
+        rightBarButtonItem.title = "날짜 선택"
+        rightBarButtonItem.style = .plain
+        
+        navigationItem.rightBarButtonItem = rightBarButtonItem
     }
     
     private func configureRefreshController() {
@@ -203,7 +216,10 @@ extension MovieRankingViewController {
         navigationController?.setToolbarHidden(false, animated: true)
         
         let flexibleItem = UIBarButtonItem(systemItem: .flexibleSpace)
-        let barButtonItem = UIBarButtonItem(title: "화면 전환", style: .plain, target: self, action: #selector(didTapChangedScreenButton))
+        let barButtonItem = self.changedSceneBarButtonItem
+        
+        barButtonItem.title = "화면 전환"
+        barButtonItem.style = .plain
         
         setToolbarItems([flexibleItem, barButtonItem, flexibleItem], animated: true)
     }
