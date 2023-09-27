@@ -14,30 +14,17 @@ final class MovieRankingViewModel {
     var rankingViewType: BehaviorSubject<RankingViewType> = BehaviorSubject(value: .list)
     var rankingData: BehaviorRelay<[InfoObject]> = BehaviorRelay(value: [])
     var isFetching: BehaviorSubject<Bool> = BehaviorSubject(value: false)
+    var boxofficeDate: BehaviorSubject<Date>
+    var navigationTitleText: BehaviorSubject<String>
     var disposeBag = DisposeBag()
-    var boxofficeDate: Date {
-        didSet {
-            dataManager = RankingManager(date: boxofficeDate)
-        }
-    }
-    var navigationTitleText: String {
-        return Date.dateFormatter.string(from: self.boxofficeDate)
-    }
     
     init() {
-        self.boxofficeDate = Date.yesterday ?? Date()
-        dataManager = RankingManager(date: boxofficeDate)
+        let initialDate = Date.yesterday ?? Date()
+        self.boxofficeDate = BehaviorSubject(value: initialDate)
+        self.navigationTitleText = BehaviorSubject(value: Date.dateFormatter.string(from: initialDate))
+        self.dataManager = RankingManager(date: initialDate)
         
-        rankingData
-            .map { data in
-                if data.count > 0 {
-                    return true
-                } else {
-                    return false
-                }
-            }
-            .bind(to: isFetching)
-            .disposed(by: disposeBag)
+        binding()
     }
     
     func fetchBoxofficeData(_ handler: @escaping (Result<[InfoObject], Error>) -> Void) {
@@ -51,5 +38,25 @@ final class MovieRankingViewModel {
             .take(1)
             .bind(to: rankingData)
             .disposed(by: self.disposeBag)
+    }
+    
+    private func binding() {
+        rankingData
+            .map { data in
+                if data.count > 0 {
+                    return true
+                } else {
+                    return false
+                }
+            }
+            .bind(to: isFetching)
+            .disposed(by: disposeBag)
+        
+        boxofficeDate
+            .subscribe { date in
+                self.dataManager = RankingManager(date: date)
+                self.navigationTitleText.onNext(Date.dateFormatter.string(from: date))
+            }
+            .disposed(by: disposeBag)
     }
 }

@@ -24,7 +24,6 @@ final class MovieRankingViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        configureNavigationTitle()
         startLoadingView()
         bindingByUiComponents()
         fetchBoxofficeData()
@@ -60,7 +59,7 @@ final class MovieRankingViewController: UIViewController {
                 let calendarVC = CalendarViewController()
                 
                 calendarVC.delegate = self
-                calendarVC.selectedDate = self.viewModel.boxofficeDate
+                calendarVC.selectedDate = (try? self.viewModel.boxofficeDate.value()) ?? Date()
                 
                 self.present(calendarVC, animated: true)
             })
@@ -76,6 +75,11 @@ final class MovieRankingViewController: UIViewController {
             .subscribe { _ in
                 self.showChangeScreenModeAlert()
             }
+            .disposed(by: disposeBag)
+        
+        viewModel.navigationTitleText
+            .observe(on: MainScheduler.instance)
+            .bind(to: navigationItem.rx.title)
             .disposed(by: disposeBag)
     }
     
@@ -121,17 +125,13 @@ final class MovieRankingViewController: UIViewController {
 extension MovieRankingViewController: ChangedDateDelegate {
     func changeDate(_ date: Date) {
         startLoadingView()
-        viewModel.boxofficeDate = date
-        configureNavigationTitle()
+        viewModel.boxofficeDate.onNext(date)
         fetchBoxofficeData()
     }
 }
 
 // MARK: UI
 extension MovieRankingViewController {
-    private func configureNavigationTitle() {
-        navigationItem.title = viewModel.navigationTitleText
-    }
     
     private func makeCollectionViewListLayout() -> UICollectionViewCompositionalLayout {
         let configuration = UICollectionLayoutListConfiguration(appearance: .plain)
@@ -198,8 +198,6 @@ extension MovieRankingViewController {
     }
     
     private func configureNavigationItems() {
-        configureNavigationTitle()
-        
         let rightBarButtonItem = UIBarButtonItem()
         
         rightBarButtonItem.title = "날짜 선택"
