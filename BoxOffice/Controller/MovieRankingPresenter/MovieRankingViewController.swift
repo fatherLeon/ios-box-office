@@ -53,6 +53,17 @@ final class MovieRankingViewController: UIViewController {
                 self.navigationController?.pushViewController(nextViewController, animated: true)
             })
             .disposed(by: disposeBag)
+        
+        navigationItem.rightBarButtonItem?.rx.tap
+            .subscribe(onNext: { event in
+                let calendarVC = CalendarViewController()
+                
+                calendarVC.delegate = self
+                calendarVC.selectedDate = self.viewModel.boxofficeDate
+                
+                self.present(calendarVC, animated: true)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func fetchBoxofficeData() {
@@ -188,7 +199,7 @@ extension MovieRankingViewController {
     
     private func configureNavigationItems() {
         configureNavigationTitle()
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "날짜 선택", style: .plain, target: self, action: #selector(didTapDateSelectionButton))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "날짜 선택", style: .plain, target: self, action: nil)
     }
     
     private func configureRefreshController() {
