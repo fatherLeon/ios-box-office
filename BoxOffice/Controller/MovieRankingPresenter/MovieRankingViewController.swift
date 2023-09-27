@@ -36,17 +36,13 @@ final class MovieRankingViewController: UIViewController {
                 
                 cell.updateLabelText(for: uiModel)
             }
-            .disposed(by: disposeBag)
+            .disposed(by: self.disposeBag)
         
         viewModel.isFetching
-            .subscribe(on: MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
             .subscribe { value in
-                if value {
-                    DispatchQueue.main.async {
-                        self.stopLoadingView()
-                        self.collectionView?.refreshControl?.endRefreshing()
-                    }
-                }
+                self.stopLoadingView()
+                self.collectionView?.refreshControl?.endRefreshing()
             }
             .disposed(by: disposeBag)
         
@@ -88,15 +84,15 @@ final class MovieRankingViewController: UIViewController {
         let alert = UIAlertController(title: "화면모드변경",
                                       message: nil,
                                       preferredStyle: .actionSheet)
-        let alertAction = UIAlertAction(title: viewModel.rankingViewType.anotherTitle, style: .default, handler: { [weak self] _ in
-            switch self?.viewModel.rankingViewType {
+        let alertAction = UIAlertAction(title: try? viewModel.rankingViewType.value().anotherTitle, style: .default, handler: { [weak self] _ in
+            switch try? self?.viewModel.rankingViewType.value() {
             case .list:
                 guard let iconLayout = self?.makeCollectionViewIconLayout() else { return }
-                self?.viewModel.rankingViewType = .icon
+                self?.viewModel.rankingViewType.onNext(.icon)
                 self?.changeCollectionViewLayout(layout: iconLayout)
             case .icon:
                 guard let listLayout = self?.makeCollectionViewListLayout() else { return }
-                self?.viewModel.rankingViewType = .list
+                self?.viewModel.rankingViewType.onNext(.list)
                 self?.changeCollectionViewLayout(layout: listLayout)
             default:
                 return

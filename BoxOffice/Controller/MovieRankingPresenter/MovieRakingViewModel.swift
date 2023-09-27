@@ -10,8 +10,8 @@ import RxRelay
 import Foundation
 
 final class MovieRankingViewModel {
-    var rankingViewType: RankingViewType = .list
     private var dataManager: RankingManager?
+    var rankingViewType: BehaviorSubject<RankingViewType> = BehaviorSubject(value: .list)
     var rankingData: BehaviorRelay<[InfoObject]> = BehaviorRelay(value: [])
     var isFetching: BehaviorSubject<Bool> = BehaviorSubject(value: false)
     var disposeBag = DisposeBag()
