@@ -6,11 +6,14 @@
 //
 
 import UIKit
+import RxSwift
 
 final class MovieDescManager {
     let boxofficeInfo: BoxofficeInfo<MovieInfoObject>
     let movieImage: BoxofficeInfo<MovieImageObject>
     var imageDocument: Document?
+    
+    private var disposeBag = DisposeBag()
     
     init(movieCode: String, movieName: String, session: URLSession = URLSession.shared) {
         let movieApiType = APIType.movie(movieCode)
@@ -46,6 +49,29 @@ final class MovieDescManager {
             
             self.fetchImage(imageUrlText: document.url, imageSize: imageSize, handler: handler)
         }
+    }
+    
+    func fetchMoviePosterImageByRx() -> Observable<(UIImage, CGSize)> {
+        let dispatchGroup = DispatchGroup()
+        
+        dispatchGroup.enter()
+        
+        movieImage.fetchDataByRx(by: MovieImageObject.self)
+            .subscribe { data in
+                self.imageDocument = data.documents.first
+                dispatchGroup.leave()
+            }
+            .disposed(by: disposeBag)
+        
+        dispatchGroup.wait()
+        
+        guard let document = self.imageDocument,
+              let url = URL(string: document.url) else { return .error(BoxofficeError.urlError) }
+        
+        return movieImage.fetchImageByRx(url: url)
+            .map { image in
+                return (image, CGSize(width: document.width, height: document.height))
+            }
     }
     
     private func fetchImage(imageUrlText: String, imageSize: CGSize, handler: @escaping (Result<(UIImage, CGSize), BoxofficeError>) -> Void) {
