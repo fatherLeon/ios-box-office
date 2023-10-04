@@ -114,7 +114,6 @@ final class BoxofficeInfo<T> {
         let request = makeRequest(url: url)!
         
         let observable = model.searchByRx(request)
-            .take(1)
             .map { data in
                 let image = UIImage(data: data) ?? UIImage(systemName: "star.fill")!
                 
@@ -122,28 +121,5 @@ final class BoxofficeInfo<T> {
             }
         
         return observable
-        
-        
-//        return Observable.create { observer in
-//            guard let url = self.apiType.receiveUrl() else {
-//                
-//                observer.onError(BoxofficeError.urlError)
-//                
-//                return Disposables.create()
-//            }
-//            
-//            guard let data = try? Data(contentsOf: url),
-//                  let image = UIImage(data: data) else {
-//                
-//                observer.onError(BoxofficeError.imageVaildError)
-//                
-//                return Disposables.create()
-//            }
-//            
-//            observer.onNext(image)
-//            observer.onCompleted()
-//            
-//            return Disposables.create()
-//        }
     }
 }
