@@ -6,14 +6,13 @@
 //
 
 import UIKit
+import RxSwift
 
 final class MovieDetailViewController: UIViewController {
     
     // MARK: ViewModel
     private let viewModel: MovieDetailViewModel
-    
-    // MARK: - Properties
-    private let dispatchGroup = DispatchGroup()
+    private var disposeBag = DisposeBag()
     
     // MARK: - UI Properties
     private let scrollView = {
@@ -47,46 +46,37 @@ final class MovieDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        startLoading()
-        fetchImage()
-        fetchData()
-        stopLoading()
+        binding()
     }
     
-    private func fetchData() {
-        dispatchGroup.enter()
-        
-        viewModel.fetchData { [weak self] result in
-            switch result {
-            case .success(let data):
+    private func binding() {
+        viewModel.movieData
+            .observe(on: MainScheduler.instance)
+            .subscribe { data in
                 let infoUIModel = MovieInfoUIModel(data: data.movieInfoResult.movieInfo)
-                DispatchQueue.main.async {
-                    self?.descStackView.updateTextLabel(infoUIModel)
-                }
-            case .failure(let error):
-                DispatchQueue.main.async {
-                    self?.presentErrorAlert(error: error, title: "영화 상세 정보")
-                }
+                
+                self.descStackView.updateTextLabel(infoUIModel)
             }
-            self?.dispatchGroup.leave()
-        }
-    }
-    
-    private func fetchImage() {
-        dispatchGroup.enter()
+            .disposed(by: disposeBag)
         
-        viewModel.fetchImage { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success((let image, let imageSize)):
-                    self?.posterImageView.image = image
-                    self?.configureImageWidthConstraint(size: imageSize)
-                case .failure(let error):
-                    self?.presentErrorAlert(error: error, title: "영화 포스터 이미지")
-                }
-                self?.dispatchGroup.leave()
+        viewModel.imageInfo
+            .observe(on: MainScheduler.instance)
+            .subscribe { (image, size) in
+                self.posterImageView.image = image
+                self.configureImageWidthConstraint(size: size)
             }
-        }
+            .disposed(by: disposeBag)
+        
+        viewModel.isFetching
+            .observe(on: MainScheduler.instance)
+            .subscribe { flag in
+                if flag {
+                    self.startLoading()
+                } else {
+                    self.stopLoading()
+                }
+            }
+            .disposed(by: disposeBag)
     }
     
     private func startLoading() {
@@ -96,11 +86,9 @@ final class MovieDetailViewController: UIViewController {
     }
     
     private func stopLoading() {
-        dispatchGroup.notify(queue: .main) {
-            self.loadingView.stopAnimating()
-            self.posterImageView.isHidden = false
-            self.descStackView.isHidden = false
-        }
+        self.loadingView.stopAnimating()
+        self.posterImageView.isHidden = false
+        self.descStackView.isHidden = false
     }
 }
 

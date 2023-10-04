@@ -110,26 +110,40 @@ final class BoxofficeInfo<T> {
     }
     
     func fetchImageByRx(url: URL) -> Observable<UIImage> {
-        return Observable.create { observer in
-            guard let url = self.apiType.receiveUrl() else {
+        let url = apiType.receiveUrl()!
+        let request = makeRequest(url: url)!
+        
+        let observable = model.searchByRx(request)
+            .take(1)
+            .map { data in
+                let image = UIImage(data: data) ?? UIImage(systemName: "star.fill")!
                 
-                observer.onError(BoxofficeError.urlError)
-                
-                return Disposables.create()
+                return image
             }
-            
-            guard let data = try? Data(contentsOf: url),
-                  let image = UIImage(data: data) else {
-                
-                observer.onError(BoxofficeError.imageVaildError)
-                
-                return Disposables.create()
-            }
-            
-            observer.onNext(image)
-            observer.onCompleted()
-            
-            return Disposables.create()
-        }
+        
+        return observable
+        
+        
+//        return Observable.create { observer in
+//            guard let url = self.apiType.receiveUrl() else {
+//                
+//                observer.onError(BoxofficeError.urlError)
+//                
+//                return Disposables.create()
+//            }
+//            
+//            guard let data = try? Data(contentsOf: url),
+//                  let image = UIImage(data: data) else {
+//                
+//                observer.onError(BoxofficeError.imageVaildError)
+//                
+//                return Disposables.create()
+//            }
+//            
+//            observer.onNext(image)
+//            observer.onCompleted()
+//            
+//            return Disposables.create()
+//        }
     }
 }
